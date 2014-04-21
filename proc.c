@@ -262,9 +262,14 @@ int sys_signal(void)
   if(argint(0, &signum) < 0 || argptr(1, (void*)&handler, sizeof(handler)) < 0)
     return -1;
 
-  // TODO ...
+  proc->sig_handlers[signum] = handler;
 
   return 0;
+}
+
+static uint set_signal_pending(uint cur_val, int signum)
+{
+  return cur_val | (1 << signum);
 }
 
 int sys_sigsend(void)
@@ -272,11 +277,25 @@ int sys_sigsend(void)
   int pid;
   int signum;
 
+  struct proc *p;
+
   if(argint(0, &pid) < 0 || argint(1, &signum) < 0)
     return -1;
 
-  // TODO ...
+  acquire(&ptable.lock);
 
+  // Scan through table looking for process matching pid
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+    if(p->pid == pid)
+      goto found;
+
+  // error: pid not found
+  release(&ptable.lock);
+  return -1;
+
+found:
+  p->pending = set_signal_pending(p->pending, signum);
+  release(&ptable.lock);
   return 0;
 }
 
