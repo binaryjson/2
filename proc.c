@@ -37,6 +37,7 @@ allocproc(void)
 {
   struct proc *p;
   char *sp;
+  int i;
 
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
@@ -70,6 +71,12 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
+
+  // New processes have no pending signals
+  p->pending = 0;
+  for(i=0; i<NUMSIG; ++i) {
+    p->sig_handlers[i] = 0;
+  }
 
   return p;
 }

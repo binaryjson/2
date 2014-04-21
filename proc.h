@@ -1,3 +1,5 @@
+#include "signal.h"
+
 // Segments in proc->gdt.
 #define NSEGS     7
 
@@ -66,6 +68,14 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+
+  // Signal handling:
+  uint pending;                // bits set for pending signal. uint type must
+                               // be large enough to hold NUMSIG signals
+
+  sighandler_t sig_handlers[NUMSIG]; // Registered signal handlers. If set to
+                                     // NULL then the default signal handler
+                                     // will be used.
 };
 
 // Process memory is laid out contiguously, low addresses first:
