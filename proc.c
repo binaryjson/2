@@ -325,6 +325,11 @@ register_handler(sighandler_t sighandler)
   proc->tf->eip = (uint)sighandler;
 }
 
+static void default_signal_handler(int pid)
+{
+  cprintf("A signal was accepted by process %d", pid);
+}
+
 
 //PAGEBREAK: 42
 // Per-CPU process scheduler.
@@ -360,7 +365,11 @@ scheduler(void)
       for(i = 0; i < NUMSIG; ++i) {
         if(is_signal_pending(p->pending, i)) {
           clear_signal_pending(p->pending, i);
-          register_handler(p->sig_handlers[i]);
+          if(p->sig_handlers[i]) {
+            register_handler(p->sig_handlers[i]);
+          } else {
+            default_signal_handler(proc->pid);
+          }
         }
       }
       swtch(&cpu->scheduler, proc->context);
