@@ -272,6 +272,16 @@ static uint set_signal_pending(uint cur_val, int signum)
   return cur_val | (1 << signum);
 }
 
+static uint clear_signal_pending(uint cur_val, int signum)
+{
+  return cur_val & ~(1 << signum);
+}
+
+static int is_signal_pending(uint cur_val, int signum)
+{
+  return cur_val & (1 << signum);
+}
+
 int sys_sigsend(void)
 {
   int pid;
@@ -328,6 +338,7 @@ void
 scheduler(void)
 {
   struct proc *p;
+  int i;
 
   for(;;){
     // Enable interrupts on this processor.
@@ -345,6 +356,13 @@ scheduler(void)
       proc = p;
       switchuvm(p);
       p->state = RUNNING;
+      // Before resuming execution of the process, schedule any pending signals
+      for(i = 0; i < NUMSIG; ++i) {
+        if(is_signal_pending(p->pending, i)) {
+          clear_signal_pending(p->pending, i);
+          register_handler(p->sig_handlers[i]);
+        }
+      }
       swtch(&cpu->scheduler, proc->context);
       switchkvm();
 
