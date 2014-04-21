@@ -153,6 +153,10 @@ fork(void)
   np->sz = proc->sz;
   np->parent = proc;
   *np->tf = *proc->tf;
+  np->pending = proc->pending;
+  for(i = 0; i < NUMSIG; ++i) {
+    np->sig_handlers[i] = proc->sig_handlers[i];
+  }
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
