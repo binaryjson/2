@@ -76,6 +76,8 @@ struct proc {
   sighandler_t sig_handlers[NUMSIG]; // Registered signal handlers. If set to
                                      // NULL then the default signal handler
                                      // will be used.
+
+  int alarm_ticks;             // Countdown till SIGALRM is generated
 };
 
 // Process memory is laid out contiguously, low addresses first:
@@ -83,3 +85,5 @@ struct proc {
 //   original data and bss
 //   fixed-size stack
 //   expandable heap
+
+void proc_tick_alarms();

@@ -78,6 +78,8 @@ found:
     p->sig_handlers[i] = 0;
   }
 
+  p->alarm_ticks = 0;
+
   return p;
 }
 
@@ -518,6 +520,26 @@ kill(int pid)
   }
   release(&ptable.lock);
   return -1;
+}
+
+void
+proc_tick_alarms()
+{
+  struct proc *p;
+
+  acquire(&ptable.lock);
+  // Iterate through all the processes and decrement their alarm ticks
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    // Even if p is UNUSED (or any other state), no harm is done here since we
+    // only twiddle some fields
+    if(p->alarm_ticks > 0) {
+      p->alarm_ticks--;
+      if(p->alarm_ticks == 0) {
+        p->pending = set_signal_pending(p->pending, SIGALRM);
+      }
+    }
+  }
+  release(&ptable.lock);
 }
 
 //PAGEBREAK: 36

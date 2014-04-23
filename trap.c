@@ -39,7 +39,7 @@ void sys_alarm(void)
   if(argint(0, &ticks) < 0)
     return;
 
-  // TODO ...
+  proc->alarm_ticks = ticks;
 }
 
 //PAGEBREAK: 41
@@ -63,6 +63,7 @@ trap(struct trapframe *tf)
       ticks++;
       wakeup(&ticks);
       release(&tickslock);
+      proc_tick_alarms();
     }
     lapiceoi();
     break;
