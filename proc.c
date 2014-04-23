@@ -160,6 +160,8 @@ fork(void)
     np->sig_handlers[i] = proc->sig_handlers[i];
   }
 
+  np->alarm_ticks = proc->alarm_ticks;
+
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
 
