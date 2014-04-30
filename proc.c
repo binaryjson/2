@@ -8,6 +8,14 @@
 #include "spinlock.h"
 #include "signal.h"
 
+// For some reason there doesn't seem to be a proper way to set a function
+// pointer to NULL in our environment. Setting it NULL (or 0) compiles to
+// address 0x00000000 which is actually a valid address, and in fact happens to
+// often be the address of the first function defined in the program. So this
+// is a hack to invent our own "null" value... hopefully, the unlikely event of
+// a collision does not happen
+#define DEFAULT_SIG_HANDLER ((sighandler_t)0xFFFFFFFF)
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -75,7 +83,7 @@ found:
   // New processes have no pending signals
   p->pending = 0;
   for(i=0; i<NUMSIG; ++i) {
-    p->sig_handlers[i] = 0;
+    p->sig_handlers[i] = DEFAULT_SIG_HANDLER;
   }
 
   p->alarm_ticks = 0;
@@ -373,7 +381,7 @@ scheduler(void)
       for(i = 0; i < NUMSIG; ++i) {
         if(is_signal_pending(p->pending, i)) {
           p->pending = clear_signal_pending(p->pending, i);
-          if(p->sig_handlers[i]) {
+          if(p->sig_handlers[i] != DEFAULT_SIG_HANDLER) {
             register_handler(p->sig_handlers[i]);
           } else {
             default_signal_handler(proc->pid);
