@@ -335,7 +335,7 @@ register_handler(sighandler_t sighandler)
 
 static void default_signal_handler(int pid)
 {
-  cprintf("A signal was accepted by process %d", pid);
+  cprintf("A signal was accepted by process %d\n", pid);
 }
 
 
