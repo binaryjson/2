@@ -372,7 +372,7 @@ scheduler(void)
       // Before resuming execution of the process, schedule any pending signals
       for(i = 0; i < NUMSIG; ++i) {
         if(is_signal_pending(p->pending, i)) {
-          clear_signal_pending(p->pending, i);
+          p->pending = clear_signal_pending(p->pending, i);
           if(p->sig_handlers[i]) {
             register_handler(p->sig_handlers[i]);
           } else {
