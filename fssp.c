@@ -187,9 +187,11 @@ main(int argc, char *argv[])
     for(i = 0; i < n; ++i) {
       binary_semaphore_up(&soldier_waiting[i]);
     }
+
     for(i = 0; i < n; ++i) {
       binary_semaphore_down(&soldier_prepared[i]);
     }
+
     for(i = 0; i < n; ++i) {
       binary_semaphore_up(&soldier_update[i]);
     }
