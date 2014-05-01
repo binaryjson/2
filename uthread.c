@@ -163,7 +163,7 @@ void uthread_yield(void)
 
 int  uthred_self(void)
 {
-  return current_thread_index;
+  return threads[current_thread_index].tid;
 }
 
 int  uthred_join(int tid)
