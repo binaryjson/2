@@ -270,6 +270,9 @@ suspend:
   }
 
   // Finally remove self from the head of the queue
+  if(semaphore->last == &this_node) {
+    xchg((uint*)(&semaphore->last), (uint)this_node.next);
+  }
   xchg((uint*)(&semaphore->first), (uint)this_node.next);
 }
 
