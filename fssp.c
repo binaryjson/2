@@ -106,7 +106,7 @@ void run_soldier(void* data)
   }
 }
 
-void print_cells(int n)
+void print_cells()
 {
   int i;
   for(i = 0; i < n; ++i) {
@@ -166,7 +166,7 @@ main(int argc, char *argv[])
       binary_semaphore_down(&soldier_ready[i]);
     }
 
-    print_cells(n);
+    print_cells();
 
     for(i = 0; i < n; ++i) {
       binary_semaphore_up(&soldier_waiting[i]);
