@@ -122,6 +122,10 @@ void uthread_exit(void)
 
 void uthread_yield(void)
 {
+  // This is necessary incase uthread_yield was explicitly called rather than
+  // being called from the alarm signal:
+  alarm(0);
+
   if (threads[current_thread_index].state == T_RUNNING) {
     threads[current_thread_index].state = T_RUNNABLE;
   }
