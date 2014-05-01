@@ -1,6 +1,7 @@
 #include "types.h"
 #include "user.h"
 #include "uthread.h"
+#include "x86.h"
 
 struct uthread threads[MAX_THREAD];
 int next_tid;
@@ -213,4 +214,95 @@ int  uthread_self(void)
 int  uthread_join(int tid)
 {
   return uthred_join(tid);
+}
+
+void binary_semaphore_init(struct binary_semaphore* semaphore, int value)
+{
+  semaphore->value = !!value;
+  semaphore->first = 0;
+  semaphore->last = 0;
+}
+
+void binary_semaphore_down(struct binary_semaphore* semaphore)
+{
+  struct sem_queue_node *prev_last;
+  struct sem_queue_node this_node;
+
+  uint old;
+  old = xchg(&semaphore->value, 0);
+
+  if(old == 1 && !semaphore->first) {
+    // The semaphore was up, and there are no threads waiting in the queue
+    return;
+  }
+
+  // The semaphore was already down, so we must block until some other thread raises it
+
+  // Add the current thread to the end of the semaphore's waiting queue:
+
+  //this_node.tid = uthread_self();
+  this_node.next = 0;
+  prev_last = (struct sem_queue_node*)xchg((uint*)(&semaphore->last), (uint)(&this_node));
+  if(prev_last) {
+    prev_last->next = &this_node;
+  } else {
+    xchg((uint*)(&semaphore->first), (uint)(&this_node));
+  }
+
+suspend:
+
+  // Now go to sleep
+  threads[current_thread_index].state = T_SLEEPING;
+  uthread_yield();
+
+  // The thread has been awoken.
+
+  // First check if we are first in the queue
+
+  if(semaphore->first != &this_node) {
+    goto suspend;
+  }
+
+  // Next bring down the semaphore and verify that it was really up
+  old = xchg(&semaphore->value, 0);
+  if(old != 1) {
+    goto suspend;
+  }
+
+  // Finally remove self from the head of the queue
+  xchg((uint*)(&semaphore->first), (uint)this_node.next);
+}
+
+void binary_semaphore_up(struct binary_semaphore* semaphore)
+{
+  int i;
+  uint old;
+
+try:
+
+  old = xchg(&semaphore->value, 1);
+
+  if(old == 1) {
+    if(!semaphore->first) {
+      printf(2, "ERROR: Called binary_semaphore_up on semaphore that was already up, with no waiting threads\n");
+      exit();
+    } else {
+      // Wake up all sleeping threads
+      for(i = 0; i < MAX_THREAD; ++i) {
+        if (threads[i].state == T_SLEEPING) {
+          threads[i].state = T_RUNNABLE;
+        }
+      }
+
+      uthread_yield();
+      goto try;
+    }
+  }
+
+  // Wake up all sleeping threads
+  for(i = 0; i < MAX_THREAD; ++i) {
+    if (threads[i].state == T_SLEEPING) {
+      threads[i].state = T_RUNNABLE;
+    }
+  }
 }

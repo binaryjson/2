@@ -26,3 +26,23 @@ int  uthred_join(int tid);
 // Aliases:
 int  uthread_self(void);
 int  uthread_join(int tid);
+
+struct sem_queue_node {
+    //int tid;
+    struct sem_queue_node* next;
+};
+
+struct binary_semaphore {
+    uint value;
+    struct sem_queue_node* first;
+    struct sem_queue_node* last;
+};
+
+void binary_semaphore_init(struct binary_semaphore* semaphore, int value);
+
+// Calling binary_semaphore_down when the semaphore is already down will block
+// until another thread calls binary_semaphore_up
+void binary_semaphore_down(struct binary_semaphore* semaphore);
+
+// Calling binary_semaphore_up when the semaphore is already up is an error
+void binary_semaphore_up(struct binary_semaphore* semaphore);
