@@ -131,6 +131,19 @@ void print_cells()
   printf(2, "\n");
 }
 
+int all_firing()
+{
+  int i;
+
+  for(i = 0; i < n; ++i) {
+    if(cells[i] != F) {
+      return 0;
+    }
+  }
+
+  return 1;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -167,6 +180,9 @@ main(int argc, char *argv[])
     }
 
     print_cells();
+    if(all_firing()) {
+      exit();
+    }
 
     for(i = 0; i < n; ++i) {
       binary_semaphore_up(&soldier_waiting[i]);
@@ -178,6 +194,4 @@ main(int argc, char *argv[])
       binary_semaphore_up(&soldier_update[i]);
     }
   }
-
-  exit();
 }
